@@ -1,0 +1,14 @@
+jdbc:
+  derby:
+    url: jdbc:derby:target/derby/CsvDataSetBuilderIT;create=true
+    driverClassName: org.apache.derby.jdbc.EmbeddedDriver
+    initialSize: 1
+  postgresql:
+    url: jdbc:tc:postgresql://localhost/test
+    initialSize: 1
+  mysql:
+    url: jdbc:tc:mysql://localhost/test?generateSimpleParameterMetadata=true
+    initialSize: 1
+
+jdbctest:
+  quoteIdentifiers: false

@@ -45,7 +45,7 @@ public class JdbcTestModuleIT {
 
     @Test
     public void testListenersClasses_Injected() {
-        BQRuntime runtime = TEST_FACTORY.app("-c", "classpath:io/bootique/jdbc/test/dummy-ds.yml")
+        BQRuntime runtime = TEST_FACTORY.app("-c", "classpath:io/bootique/jdbc/test/jdbcNoQuote.yml")
                 .autoLoadModules()
                 .module(binder -> {
                     JdbcModule.extend(binder)
@@ -63,7 +63,7 @@ public class JdbcTestModuleIT {
 
     @Test
     public void testListeners_Injected() {
-        BQRuntime runtime = TEST_FACTORY.app("-c", "classpath:io/bootique/jdbc/test/dummy-ds.yml")
+        BQRuntime runtime = TEST_FACTORY.app("-c", "classpath:io/bootique/jdbc/test/jdbcNoQuote.yml")
                 .autoLoadModules()
                 .module(new BQModule() {
 

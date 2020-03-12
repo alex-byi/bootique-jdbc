@@ -46,10 +46,10 @@ public class DerbyDatabaseIT {
         this.derbyDir = new File("target/derby/DerbyDatabaseIT");
 
         BQRuntime runtime = testFactory
-                .app("--config=classpath:io/bootique/jdbc/test/DerbyDatabaseIT.yml")
+                .app("--config=classpath:io/bootique/jdbc/test/jdbc.yml")
                 .autoLoadModules()
                 .createRuntime();
-        this.channel = DatabaseChannel.get(runtime);
+        this.channel = DatabaseChannel.get(runtime, "derby");
         assertNotNull(this.channel);
     }
 

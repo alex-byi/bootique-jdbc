@@ -20,6 +20,7 @@
 package io.bootique.jdbc.test;
 
 import io.bootique.BQRuntime;
+import io.bootique.jdbc.test.db.DBAdapter;
 import io.bootique.test.junit.BQTestFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -28,6 +29,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DefaultDatabaseChannelIT {
+
+    public static String quote = "\"a\"";
 
     @ClassRule
     public static BQTestFactory TEST_FACTORY = new BQTestFactory();
@@ -38,7 +41,10 @@ public class DefaultDatabaseChannelIT {
                 .autoLoadModules()
                 .createRuntime();
 
-        DatabaseChannel channel = DatabaseChannel.get(runtime);
+        DBAdapter dbAdapter = DBAdapter.createAdapter();
+
+        DatabaseChannel channel = DatabaseChannel.get(runtime, dbAdapter.getDBType());
+
 
         assertTrue(channel instanceof DefaultDatabaseChannel);
         return (DefaultDatabaseChannel) channel;
@@ -46,13 +52,13 @@ public class DefaultDatabaseChannelIT {
 
     @Test
     public void testDefaultQuotesOn() {
-        DefaultDatabaseChannel channel = loadChannel("classpath:io/bootique/jdbc/test/DefaultDatabaseChannel_QuoteIT.yml");
-        assertEquals("\"a\"", channel.getDefaultIdentifierQuotationStrategy().quoted("a"));
+        DefaultDatabaseChannel channel = loadChannel("classpath:io/bootique/jdbc/test/jdbc.yml");
+            assertEquals(quote, channel.getDefaultIdentifierQuotationStrategy().quoted("a"));
     }
 
     @Test
     public void testDefaultQuotesOff() {
-        DefaultDatabaseChannel channel = loadChannel("classpath:io/bootique/jdbc/test/DefaultDatabaseChannel_NoQuoteIT.yml");
+        DefaultDatabaseChannel channel = loadChannel("classpath:io/bootique/jdbc/test/jdbcNoQuote.yml");
         assertEquals("a", channel.getDefaultIdentifierQuotationStrategy().quoted("a"));
     }
 }

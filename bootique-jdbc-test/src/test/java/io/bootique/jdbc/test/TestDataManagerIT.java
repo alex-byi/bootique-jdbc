@@ -20,6 +20,7 @@
 package io.bootique.jdbc.test;
 
 import io.bootique.BQRuntime;
+import io.bootique.jdbc.test.db.DBAdapter;
 import io.bootique.test.junit.BQTestFactory;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -39,14 +40,16 @@ public class TestDataManagerIT {
     @BeforeClass
     public static void setupDB() {
         BQRuntime testRuntime = TEST_FACTORY
-                .app("--config=classpath:io/bootique/jdbc/test/TestDataManagerIT.yml")
+                .app("--config=classpath:io/bootique/jdbc/test/jdbc.yml")
                 .autoLoadModules()
                 .createRuntime();
 
-        DatabaseChannel channel = DatabaseChannel.get(testRuntime);
+        DBAdapter dbAdapter = DBAdapter.createAdapter();
 
-        channel.execStatement().exec("CREATE TABLE \"t1\" (\"id\" INT NOT NULL PRIMARY KEY, \"name\" VARCHAR(10))");
-        channel.execStatement().exec("CREATE TABLE \"t2\" (\"id\" INT NOT NULL PRIMARY KEY, \"name\" VARCHAR(10), \"t1_id\" INT)");
+        DatabaseChannel channel = DatabaseChannel.get(testRuntime, dbAdapter.getDBType());
+
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t1\" (\"id\" INT NOT NULL PRIMARY KEY, \"name\" VARCHAR(10))"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t2\" (\"id\" INT NOT NULL PRIMARY KEY, \"name\" VARCHAR(10), \"t1_id\" INT)"));
 
         T1 = channel.newTable("t1").columnNames("id", "name").build();
         T2 = channel.newTable("t2").columnNames("id", "name", "t1_id").build();

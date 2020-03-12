@@ -20,6 +20,7 @@
 package io.bootique.jdbc.test;
 
 import io.bootique.BQRuntime;
+import io.bootique.jdbc.test.db.DBAdapter;
 import io.bootique.test.junit.BQTestFactory;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -48,15 +49,17 @@ public class TableIT {
     @BeforeClass
     public static void setupDB() {
         BQRuntime runtime = TEST_FACTORY
-                .app("--config=classpath:io/bootique/jdbc/test/TableIT.yml")
+                .app("--config=classpath:io/bootique/jdbc/test/jdbc.yml")
                 .autoLoadModules()
                 .createRuntime();
 
-        DatabaseChannel channel = DatabaseChannel.get(runtime);
+        DBAdapter dbAdapter = DBAdapter.createAdapter();
 
-        channel.execStatement().exec("CREATE TABLE \"t1\" (\"c1\" INT, \"c2\" VARCHAR(10), \"c3\" VARCHAR(10))");
-        channel.execStatement().exec("CREATE TABLE \"t2\" (\"c1\" INT, \"c2\" INT, \"c3\" DATE, \"c4\" TIMESTAMP)");
-        channel.execStatement().exec("CREATE TABLE \"t3\" (\"c1\" INT, \"c2\" VARCHAR (10) FOR BIT DATA)");
+        DatabaseChannel channel = DatabaseChannel.get(runtime, dbAdapter.getDBType());
+
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t1\" (\"c1\" INT, \"c2\" VARCHAR(10), \"c3\" VARCHAR(10))"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t2\" (\"c1\" INT, \"c2\" INT, \"c3\" date, \"c4\" TIMESTAMP)"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t3\" (\"c1\" INT, \"c2\" VARCHAR (10) FOR BIT DATA)"));
 
         T1 = channel.newTable("t1").columnNames("c1", "c2", "c3").initColumnTypesFromDBMetadata().build();
         T2 = channel.newTable("t2").columnNames("c1", "c2", "c3", "c4").initColumnTypesFromDBMetadata().build();
@@ -117,6 +120,7 @@ public class TableIT {
                 .set("c3", LocalDate.parse("2018-01-09"), Types.DATE)
                 .set("c1", "3", Types.INTEGER)
                 .set("c2", 4, Types.INTEGER)
+                .set("c4", null, Types.DATE)
                 .exec();
 
         List<Object[]> data = T2.select();
@@ -126,12 +130,13 @@ public class TableIT {
         assertEquals(3, row[0]);
         assertEquals(4, row[1]);
         assertEquals(Date.valueOf("2018-01-09"), row[2]);
-        assertEquals(null, row[3]);
+        assertNull(row[3]);
     }
 
     @Test
     public void testUpdateColumns_Where() {
-        T2.insert(1, 0, LocalDate.now(), new Date(0));
+
+        T2.insert(1, 0, LocalDate.now(), null);
 
         T2.update()
                 .set("c3", LocalDate.parse("2018-01-09"), Types.DATE)
@@ -148,7 +153,7 @@ public class TableIT {
         assertEquals(3, row[0]);
         assertEquals(4, row[1]);
         assertEquals(Date.valueOf("2018-01-09"), row[2]);
-        assertEquals(null, row[3]);
+        assertNull(row[3]);
     }
 
     @Test

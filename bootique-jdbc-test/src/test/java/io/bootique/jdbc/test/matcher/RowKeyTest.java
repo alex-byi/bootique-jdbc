@@ -19,7 +19,6 @@
 
 package io.bootique.jdbc.test.matcher;
 
-import io.bootique.jdbc.test.matcher.RowKey;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -46,7 +45,7 @@ public class RowKeyTest {
 
         RowKey rk3 = new RowKey(new Object[] {"a", 2});
 
-        assertTrue(rk1.equals(rk2));
-        assertFalse(rk1.equals(rk3));
+        assertEquals(rk1, rk2);
+        assertNotEquals(rk1, rk3);
     }
 }

@@ -31,6 +31,7 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class ObjectValueConverterTest {
 
@@ -64,6 +65,6 @@ public class ObjectValueConverterTest {
 
     @Test
     public void testConvert_Null() {
-        assertEquals(null, converter.convert(null));
+        assertNull(converter.convert(null));
     }
 }

@@ -23,6 +23,7 @@ import io.bootique.BQRuntime;
 import io.bootique.jdbc.test.DatabaseChannel;
 import io.bootique.jdbc.test.Table;
 import io.bootique.jdbc.test.TestDataManager;
+import io.bootique.jdbc.test.db.DBAdapter;
 import io.bootique.test.junit.BQTestFactory;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -54,17 +55,19 @@ public class CsvDataSetBuilderIT {
 
     @BeforeClass
     public static void setupDB() {
+        DBAdapter dbAdapter = DBAdapter.createAdapter();
+
         BQRuntime runtime = TEST_FACTORY
-                .app("--config=classpath:io/bootique/jdbc/test/dataset/CsvDataSetBuilderIT.yml")
+                .app("--config=classpath:io/bootique/jdbc/test/jdbc.yml")
                 .autoLoadModules()
                 .createRuntime();
 
-        DatabaseChannel channel = DatabaseChannel.get(runtime);
+        DatabaseChannel channel = DatabaseChannel.get(runtime, dbAdapter.getDBType());
 
-        channel.execStatement().exec("CREATE TABLE \"t1\" (\"c1\" INT, \"c2\" VARCHAR(10), \"c3\" VARCHAR(10))");
-        channel.execStatement().exec("CREATE TABLE \"t2\" (\"c1\" INT, \"c2\" INT, \"c3\" DATE, \"c4\" TIMESTAMP)");
-        channel.execStatement().exec("CREATE TABLE \"t3\" (\"c1\" INT, \"c2\" VARCHAR (10) FOR BIT DATA)");
-        channel.execStatement().exec("CREATE TABLE \"t4\" (\"c1\" INT, \"c2\" BOOLEAN)");
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t1\" (\"c1\" INT, \"c2\" VARCHAR(10), \"c3\" VARCHAR(10))"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t2\" (\"c1\" INT, \"c2\" INT, \"c3\" DATE, \"c4\" TIMESTAMP)"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t3\" (\"c1\" INT, \"c2\" VARCHAR (10) FOR BIT DATA)"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t4\" (\"c1\" INT, \"c2\" BOOLEAN)"));
 
         T1 = channel.newTable("t1").columnNames("c1", "c2", "c3").initColumnTypesFromDBMetadata().build();
         T2 = channel.newTable("t2").columnNames("c1", "c2", "c3", "c4").initColumnTypesFromDBMetadata().build();
@@ -74,13 +77,13 @@ public class CsvDataSetBuilderIT {
 
     @Test
     public void testLoad_Empty() {
-        T1.csvDataSet().load("classpath:io/bootique/jdbc/test/dataset/empty.csv").persist();
+        T1.csvDataSet().load("classpath:io/bootique/jdbc/test/csv/empty.csv").persist();
         T1.matcher().assertNoMatches();
     }
 
     @Test
     public void testCsvDataSet_Load() {
-        T1.csvDataSet().load("classpath:io/bootique/jdbc/test/dataset/t1.csv").persist();
+        T1.csvDataSet().load("classpath:io/bootique/jdbc/test/csv/1.csv").persist();
 
         List<Object[]> data = T1.select();
         assertEquals(2, data.size());
@@ -101,7 +104,7 @@ public class CsvDataSetBuilderIT {
 
     @Test
     public void testCsvDataSet_Load_Nulls_Dates() {
-        T2.csvDataSet().load("classpath:io/bootique/jdbc/test/dataset/t2.csv").persist();
+        T2.csvDataSet().load("classpath:io/bootique/jdbc/test/csv/2.csv").persist();
 
         List<Object[]> data = T2.select();
         assertEquals(3, data.size());
@@ -128,7 +131,7 @@ public class CsvDataSetBuilderIT {
 
     @Test
     public void testCsvDataSet_Load_Binary() {
-        T3.csvDataSet().load("classpath:io/bootique/jdbc/test/dataset/t3.csv").persist();
+        T3.csvDataSet().load("classpath:io/bootique/jdbc/test/csv/3.csv").persist();
 
         List<Object[]> data = T3.select();
         assertEquals(3, data.size());
@@ -151,7 +154,7 @@ public class CsvDataSetBuilderIT {
 
     @Test
     public void testCsvDataSet_Load_Boolean() {
-        T4.csvDataSet().load("classpath:io/bootique/jdbc/test/dataset/t4.csv").persist();
+        T4.csvDataSet().load("classpath:io/bootique/jdbc/test/csv/4.csv").persist();
 
         List<Object[]> data = T4.select();
         assertEquals(3, data.size());

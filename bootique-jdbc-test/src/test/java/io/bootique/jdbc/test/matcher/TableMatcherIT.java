@@ -23,6 +23,7 @@ import io.bootique.BQRuntime;
 import io.bootique.jdbc.test.DatabaseChannel;
 import io.bootique.jdbc.test.Table;
 import io.bootique.jdbc.test.TestDataManager;
+import io.bootique.jdbc.test.db.DBAdapter;
 import io.bootique.test.junit.BQTestFactory;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -47,16 +48,18 @@ public class TableMatcherIT {
     @BeforeClass
     public static void setupDB() {
         BQRuntime runtime = TEST_FACTORY
-                .app("-c", "classpath:io/bootique/jdbc/test/matcher/TableMatcherIT.yml")
+                .app("-c", "classpath:io/bootique/jdbc/test/jdbc.yml")
                 .autoLoadModules()
                 .createRuntime();
 
-        DatabaseChannel channel = DatabaseChannel.get(runtime);
+        DBAdapter dbAdapter = DBAdapter.createAdapter();
 
-        channel.execStatement().exec("CREATE TABLE \"t1\" (\"c1\" INT, \"c2\" VARCHAR(10), \"c3\" VARCHAR(10))");
-        channel.execStatement().exec("CREATE TABLE \"t2\" (\"c1\" INT, \"c2\" INT, \"c3\" DATE, \"c4\" TIMESTAMP)");
-        channel.execStatement().exec("CREATE TABLE \"t3\" (\"c1\" INT, \"c2\" VARCHAR (10) FOR BIT DATA)");
-        channel.execStatement().exec("CREATE TABLE \"t4\" (\"c1\" BIGINT, \"c2\" VARCHAR (10))");
+        DatabaseChannel channel = DatabaseChannel.get(runtime, dbAdapter.getDBType());
+
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t1\" (\"c1\" INT, \"c2\" VARCHAR(10), \"c3\" VARCHAR(10))"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t2\" (\"c1\" INT, \"c2\" INT, \"c3\" DATE, \"c4\" TIMESTAMP)"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t3\" (\"c1\" INT, \"c2\" VARCHAR (10) FOR BIT DATA)"));
+        channel.execStatement().exec(dbAdapter.processSQL("CREATE TABLE \"t4\" (\"c1\" BIGINT, \"c2\" VARCHAR (10))"));
 
         T1 = channel.newTable("t1").columnNames("c1", "c2", "c3").initColumnTypesFromDBMetadata().build();
         T2 = channel.newTable("t2").columnNames("c1", "c2", "c3", "c4").initColumnTypesFromDBMetadata().build();
@@ -154,7 +157,7 @@ public class TableMatcherIT {
                 .values(1, "", "abcd")
                 .exec();
 
-        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/matcher/t1_ref.csv", "c1");
+        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/csv/1.csv", "c1");
     }
 
     @Test
@@ -169,7 +172,7 @@ public class TableMatcherIT {
 
         boolean succeeded;
         try {
-            matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/matcher/t1_ref.csv", "c1");
+            matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/csv/1.csv", "c1");
             succeeded = true;
         } catch (AssertionError e) {
             // expected
@@ -190,7 +193,7 @@ public class TableMatcherIT {
                 .values(2, null, "2017-01-09", "2017-01-10 13:00:01")
                 .exec();
 
-        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/matcher/t2_ref.csv", "c1");
+        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/csv/2.csv", "c1");
     }
 
     @Test
@@ -204,7 +207,7 @@ public class TableMatcherIT {
                 .values(2, "kmln".getBytes())
                 .exec();
 
-        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/matcher/t3_ref.csv", "c1");
+        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/csv/3.csv", "c1");
     }
 
     @Test
@@ -217,7 +220,7 @@ public class TableMatcherIT {
                 .values(2L, "xyz")
                 .exec();
 
-        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/matcher/t4_ref.csv", "c1");
+        matcher.assertMatchesCsv("classpath:io/bootique/jdbc/test/csv/4_1.csv", "c1");
     }
 
     private void assertAssertionError(Runnable test, String whenNoErrorMessage) {
